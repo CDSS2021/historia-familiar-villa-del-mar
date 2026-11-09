@@ -1,0 +1,553 @@
+---
+import { Image } from 'astro:assets';
+import ActividadesDelMes from '../components/ActividadesDelMes.astro';
+import type { ImageMetadata } from 'astro';
+import album from '../assets/album-familiar-con-retratos.png';
+import entrance from '../assets/entrada-centro-historia-familiar.jpeg';
+import { topics } from '../../cloudflare/solicitudes-trello.js';
+
+const team: { name: string; role: string; photo?: ImageMetadata }[] = [
+  { name: 'Elfer Junior Fernandez Higidio', role: 'Líder de templo e historia familiar de barrio' },
+  { name: 'Alfred Adolfo Steffen Chuica', role: 'Consultor de templo e historia familiar de barrio' },
+  { name: 'César David Sánchez Saldaña', role: 'Consultor de templo e historia familiar de barrio' },
+];
+
+const trelloTestUrl = import.meta.env.DEV && import.meta.env.PUBLIC_TRELLO_TEST_KEY
+  ? import.meta.env.PUBLIC_TRELLO_TEST_URL
+  : undefined;
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY?.trim();
+const liveUrl = import.meta.env.PROD && turnstileSiteKey
+  ? import.meta.env.PUBLIC_SOLICITUDES_URL?.trim()
+  : undefined;
+
+if (liveUrl) {
+  const endpoint = new URL(liveUrl);
+  if (endpoint.protocol !== 'https:' || endpoint.pathname !== '/solicitudes' || endpoint.search || endpoint.hash) {
+    throw new Error('PUBLIC_SOLICITUDES_URL debe ser la URL HTTPS del Worker con la ruta /solicitudes.');
+  }
+}
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Apoyo en templo e historia familiar del Barrio Villa del Mar · Estaca Primavera." />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/favicon.svg`} />
+    <title>Templo e historia familiar | Barrio Villa del Mar</title>
+    {liveUrl && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+  </head>
+  <body>
+    <div class="album">
+      <header>
+        <p class="notice">Recurso local no oficial de la Iglesia</p>
+        <div class="ward">
+          <p>Barrio Villa del Mar <span>· Estaca Primavera</span></p>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="title">
+          <div class="hero-copy">
+            <h1 id="title">Templo e historia<br class="desktop-break" /> familiar</h1>
+            <p>Te acompañamos a descubrir tu historia familiar</p>
+            <a class="button" id="hero-support" href="#solicitar-apoyo">Solicitar apoyo</a>
+          </div>
+          <Image
+            class="hero-art"
+            src={album}
+            alt="Ramas de olivo alrededor de tres retratos familiares ficticios en sepia"
+            widths={[480, 768, 1200, 1536]}
+            sizes="(max-width: 760px) 92vw, 57vw"
+            format="webp"
+            priority
+          />
+        </section>
+
+        <div class="support">
+          <section class="card" aria-labelledby="ayuda">
+            <svg viewBox="0 0 64 54" fill="none" aria-hidden="true">
+              <path d="M31 50c0-11 3-21 13-30M31 50c0-12-6-21-15-25M33 32C31 15 41 7 60 4c1 20-11 29-27 28ZM26 36C11 37 5 30 3 17c14 0 23 6 23 19Z" />
+            </svg>
+            <h2 id="ayuda">En qué te ayudamos</h2>
+            <ul>
+              {topics.map((topic) => <li>{topic}</li>)}
+            </ul>
+          </section>
+
+          <section class="card" aria-labelledby="ubicacion">
+            <svg viewBox="0 0 64 54" fill="none" aria-hidden="true">
+              <path d="M49 21c0 12-17 29-17 29S15 33 15 21a17 17 0 0 1 34 0Z" />
+              <circle cx="32" cy="21" r="7" />
+            </svg>
+            <h2 id="ubicacion">Dónde encontrarnos</h2>
+            <p>Barrio Villa del Mar · Estaca Primavera</p>
+            <dl class="details">
+              <div><dt>Dirección</dt><dd>Teodoro Varcarcel 512</dd></div>
+              <div><dt>Horario</dt><dd>11:15 a.m. a 12:00 p.m.</dd></div>
+            </dl>
+            <figure class="entrance-photo">
+              <Image
+                src={entrance}
+                alt="Puerta de madera con vidrio texturizado y un letrero que dice Centro de Historia Familiar"
+                widths={[320, 576, 864]}
+                sizes="(max-width: 360px) 80vw, 288px"
+                format="webp"
+              />
+              <figcaption>Entrada al Centro de Historia Familiar</figcaption>
+            </figure>
+          </section>
+        </div>
+
+        <section class="consultants" aria-labelledby="consultores">
+          <div class="consultants-intro">
+            <h2 id="consultores">Conoce al equipo</h2>
+            <p>El líder y los consultores del barrio te orientan en cada paso de tu historia familiar.</p>
+          </div>
+          <ul class="consultant-list">
+            {team.map(({ name, role, photo }) => (
+              <li class="consultant-profile">
+                {photo ? (
+                  <Image class="consultant-portrait" src={photo} alt="" width={320} height={320} fit="cover" />
+                ) : (
+                  <div class="consultant-portrait portrait-placeholder" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <circle cx="24" cy="16" r="7" />
+                      <path d="M10 40v-2a14 14 0 0 1 28 0v2" />
+                    </svg>
+                  </div>
+                )}
+                <p class="consultant-name">{name}</p>
+                <p class="consultant-role">{role}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <ActividadesDelMes />
+
+        <section class="request" id="solicitar-apoyo" aria-labelledby="request-title" tabindex="-1">
+          <div class="request-intro">
+            <p class="eyebrow">Formulario de contacto</p>
+            <h2 id="request-title">Solicitar apoyo</h2>
+            <p id="request-note">{liveUrl
+              ? 'Tu nombre, número de WhatsApp y tema se guardarán en el tablero privado de Trello del equipo del barrio para que puedan atender tu solicitud y contactarte.'
+              : trelloTestUrl
+                ? 'Para la presentación, usa datos ficticios. Al enviar, se creará una tarjeta de prueba en Trello con el nombre, el WhatsApp y el tema que ingreses.'
+                : 'El formulario todavía no está disponible.'}</p>
+          </div>
+          <form id="support-form" data-trello-test-url={trelloTestUrl} data-live-url={liveUrl} aria-describedby="request-note" autocomplete="off">
+            <fieldset disabled>
+              <label for="first-name">Nombre de pila</label>
+              <input id="first-name" type="text" placeholder="Ejemplo: Ana" value={trelloTestUrl ? 'Ana Demo' : undefined} required maxlength="80" />
+              <label for="whatsapp">Número de WhatsApp</label>
+              <input id="whatsapp" type="tel" placeholder="Ejemplo: 900 000 000" value={trelloTestUrl ? '900 000 000' : undefined} required maxlength="30" />
+              <label for="topic">Tema de ayuda</label>
+              <select id="topic" required>
+                <option value="" disabled selected>Selecciona un tema</option>
+                {topics.map((topic) => <option>{topic}</option>)}
+              </select>
+              {liveUrl && <div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-action="solicitud" data-size="flexible"></div>}
+              <button class="button" type="submit">Enviar solicitud</button>
+            </fieldset>
+            <p class="confirmation" id="request-result" role="status"></p>
+            <noscript>Activa JavaScript en tu navegador para usar el formulario.</noscript>
+          </form>
+        </section>
+      </main>
+
+      <footer>
+        <p>Barrio Villa del Mar · Estaca Primavera</p>
+        <p>Creado por César David Sánchez Saldaña</p>
+      </footer>
+    </div>
+    <a class="button floating-support" id="floating-support" href="#solicitar-apoyo" hidden>
+      Solicitar apoyo
+    </a>
+    <script>
+      const heroSupport = document.querySelector<HTMLAnchorElement>('#hero-support')!;
+      const floatingSupport = document.querySelector<HTMLAnchorElement>('#floating-support')!;
+
+      const supportObserver = new IntersectionObserver(([entry]) => {
+        floatingSupport.hidden = entry.isIntersecting;
+      });
+      supportObserver.observe(heroSupport);
+
+      const form = document.querySelector<HTMLFormElement>('#support-form')!;
+      const fields = form.querySelector('fieldset')!;
+      const result = document.querySelector('#request-result')!;
+      const firstName = form.querySelector<HTMLInputElement>('#first-name')!;
+      const whatsapp = form.querySelector<HTMLInputElement>('#whatsapp')!;
+      const topic = form.querySelector<HTMLSelectElement>('#topic')!;
+      const trelloTestUrl = form.dataset.trelloTestUrl;
+      const liveUrl = form.dataset.liveUrl;
+      const submitUrl = liveUrl || trelloTestUrl;
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!submitUrl || fields.disabled) return;
+        const turnstileToken = form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value;
+        if (liveUrl && !turnstileToken) {
+          result.textContent = 'Completa la verificación de seguridad antes de enviar la solicitud.';
+          return;
+        }
+
+        fields.disabled = true;
+        result.textContent = liveUrl ? 'Enviando solicitud…' : 'Comprobando la conexión con Trello…';
+        try {
+          const headers = new Headers({ 'Content-Type': 'application/json' });
+          if (import.meta.env.DEV && trelloTestUrl) {
+            const workerStatus = await fetch(trelloTestUrl);
+            const workerVersion = workerStatus.ok ? await workerStatus.json().catch(() => null) : null;
+            if (workerVersion?.testPayloadVersion !== 2) {
+              result.textContent = 'Actualiza el código del Worker en Cloudflare antes de crear la tarjeta de prueba.';
+              return;
+            }
+            headers.set('X-Test-Key', import.meta.env.PUBLIC_TRELLO_TEST_KEY);
+            result.textContent = 'Creando tarjeta de prueba…';
+          }
+
+          const response = await fetch(submitUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              firstName: firstName.value,
+              whatsapp: whatsapp.value,
+              topic: topic.value,
+              turnstileToken,
+            }),
+          });
+          if (response.status === 400) {
+            result.textContent = 'Revisa el nombre, el tema y el número de WhatsApp. El número debe tener entre 7 y 15 dígitos.';
+            return;
+          }
+          if (response.status === 403) {
+            result.textContent = liveUrl
+              ? 'La verificación de seguridad no se pudo validar. Complétala de nuevo.'
+              : 'Cloudflare rechazó la clave de prueba. Comprueba que TEST_KEY y PUBLIC_TRELLO_TEST_KEY tengan el mismo valor.';
+            return;
+          }
+          if (response.status === 503) {
+            result.textContent = liveUrl
+              ? 'El formulario no está disponible en este momento. Intenta más tarde.'
+              : 'Revisa los secretos y la configuración del Worker de Cloudflare.';
+            return;
+          }
+          if (!response.ok || (await response.json()).ok !== true) {
+            throw new Error('Trello test was not confirmed');
+          }
+          form.reset();
+          result.textContent = liveUrl
+            ? 'Solicitud recibida. El equipo del barrio te contactará por WhatsApp.'
+            : 'Tarjeta de prueba creada en Pendientes.';
+        } catch {
+          result.textContent = liveUrl
+            ? 'No pudimos confirmar el envío. Si ya lo intentaste, consulta al equipo antes de enviar otra solicitud.'
+            : 'No pudimos confirmar la creación de la tarjeta. Revisa Pendientes antes de volver a intentar.';
+        } finally {
+          fields.disabled = false;
+          if (liveUrl) {
+            const { turnstile } = window as Window & { turnstile?: { reset: () => void } };
+            turnstile?.reset();
+          }
+        }
+      });
+
+      form.addEventListener('input', () => {
+        result.textContent = '';
+      });
+
+      fields.disabled = !submitUrl;
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --ivory: #f8f4ea;
+    --teal: #164a4a;
+    --sage: #d8e5dc;
+    --terracotta: #a34d37;
+    --ink: #293b36;
+    --serif: Georgia, 'Times New Roman', serif;
+    --sans: system-ui, sans-serif;
+    color: var(--ink);
+    background: #fffdf8;
+    font-family: var(--sans);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+  h1, h2, p, dl, dd { margin: 0; }
+  h1, h2 { color: var(--teal); font-family: var(--serif); }
+  :focus-visible { outline: 3px solid var(--terracotta); outline-offset: 4px; }
+
+  .album {
+    max-width: 1536px;
+    margin: 14px auto;
+    width: calc(100% - 28px);
+    overflow: clip;
+    background: var(--ivory);
+    border: 1px solid #e7decf;
+    border-radius: 20px;
+  }
+
+  .notice {
+    padding: 0.65rem 1rem;
+    background: #f1e9d7;
+    color: var(--teal);
+    text-align: center;
+    font: 600 clamp(1rem, 2vw, 1.65rem)/1.25 var(--serif);
+  }
+
+  .ward {
+    display: flex;
+    align-items: center;
+    gap: 1.35rem;
+    padding: 1.4rem clamp(1.25rem, 3.1vw, 3.25rem) 0;
+    color: var(--teal);
+    font: 700 clamp(1.15rem, 2.55vw, 2.25rem)/1.2 var(--serif);
+  }
+
+  .ward::after { content: ''; flex: 1; height: 2px; background: #bacfc2; }
+  .ward span { white-space: nowrap; }
+
+  .hero {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: clamp(370px, 34vw, 545px);
+    padding: 2.25rem clamp(1.25rem, 3.1vw, 3.25rem);
+    isolation: isolate;
+  }
+
+  .hero-copy { position: relative; z-index: 1; }
+  .hero h1 { font-size: clamp(3rem, 6vw, 5.8rem); line-height: 1.01; letter-spacing: -0.045em; }
+  .hero p {
+    max-width: 27ch;
+    margin: 1.25rem 0 1.7rem;
+    font: clamp(1.35rem, 2.55vw, 2.25rem)/1.2 var(--serif);
+  }
+
+  .hero-art {
+    position: absolute;
+    inset: 50% 0 auto auto;
+    transform: translateY(-50%);
+    width: 57%;
+    height: auto;
+    mix-blend-mode: multiply;
+    mask-image: linear-gradient(to right, transparent, black 20%, black 96%, transparent),
+      linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
+    mask-composite: intersect;
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.7em 1.55em;
+    border: 0;
+    border-radius: 12px;
+    background: var(--teal);
+    color: var(--ivory);
+    font: 700 1.15rem/1.2 var(--serif);
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .button:hover { background: #103b3b; }
+  .hero .button { font-size: clamp(1.25rem, 2.45vw, 2.1rem); }
+
+  .floating-support {
+    position: fixed;
+    z-index: 2;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    box-shadow: 0 4px 16px #164a4a40;
+  }
+
+  .floating-support[hidden] { display: none; }
+
+  .support {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.75rem, 1.75vw, 1.6rem);
+    padding: 0 clamp(1rem, 2.15vw, 2.5rem);
+  }
+
+  .card {
+    background: var(--sage);
+    border-radius: 17px;
+    padding: clamp(1.1rem, 2vw, 1.8rem);
+    text-align: center;
+    line-height: 1.55;
+  }
+
+  .card svg {
+    display: block;
+    width: clamp(3rem, 6vw, 6rem);
+    margin: 0 auto 0.65rem;
+    color: var(--teal);
+    stroke: currentColor;
+    stroke-width: 2.45;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .card h2 { font-size: clamp(1.35rem, 2.1vw, 1.95rem); line-height: 1.14; text-wrap: balance; }
+  .card p, .card ul, .details { margin: 0.9rem auto 0; }
+  .card p { max-width: 32ch; }
+  .card ul { width: fit-content; padding-inline-start: 1.15rem; text-align: start; }
+  .card li::marker { color: var(--terracotta); }
+  .details div { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.25rem 0.75rem; }
+  .details dt { font-weight: 600; }
+  .details dd { color: var(--terracotta); }
+
+  .entrance-photo {
+    max-width: 18rem;
+    margin: 1.15rem auto 0;
+    padding: 0.5rem;
+    border: 1px solid #d8c9b4;
+    border-radius: 9px;
+    background: var(--ivory);
+  }
+
+  .entrance-photo img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: center 10%;
+    border-radius: 5px;
+  }
+
+  .entrance-photo figcaption {
+    margin-top: 0.4rem;
+    color: var(--teal);
+    font: 1rem/1.3 var(--serif);
+  }
+
+  .consultants {
+    max-width: 1060px;
+    width: calc(100% - 2rem);
+    margin: clamp(2rem, 5vw, 5rem) auto;
+    padding: clamp(1.25rem, 4vw, 3.3rem);
+    background: var(--sage);
+    border-radius: 17px;
+  }
+
+  .consultants-intro { text-align: center; }
+  .consultants h2 { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.06; text-wrap: balance; }
+  .consultants-intro p { max-width: 52ch; margin: 0.85rem auto 0; line-height: 1.6; }
+
+  .consultant-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    gap: 1rem;
+    max-width: 42rem;
+    margin: 1.5rem auto 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .consultant-profile {
+    width: 100%;
+    max-width: 13rem;
+    justify-self: center;
+    padding: 0.75rem;
+    border: 1px solid #d8c9b4;
+    border-radius: 9px;
+    background: var(--ivory);
+    text-align: center;
+  }
+
+  .consultant-portrait {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: 5px;
+    object-fit: cover;
+  }
+
+  .portrait-placeholder { display: grid; place-items: center; background: #eee4d2; color: var(--teal); }
+  .portrait-placeholder svg { width: 36%; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+  .consultant-name { margin-top: 0.65rem; color: var(--teal); font: 700 1.15rem/1.25 var(--serif); }
+  .consultant-role { margin-top: 0.3rem; font-size: 0.9rem; }
+
+  .request {
+    display: grid;
+    grid-template-columns: 1fr 1.18fr;
+    gap: clamp(1.5rem, 5vw, 5rem);
+    max-width: 1060px;
+    margin: clamp(2rem, 5vw, 5rem) auto;
+    padding: clamp(1.25rem, 4vw, 3.3rem);
+    width: calc(100% - 2rem);
+    border: 1px solid #d8c9b4;
+    border-top: 4px solid var(--terracotta);
+    border-radius: 16px;
+    background: #fffbf2;
+    scroll-margin-top: 1rem;
+  }
+
+  .eyebrow {
+    color: var(--terracotta);
+    font-size: 0.76rem;
+    font-weight: 750;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .request h2 { margin: 0.55rem 0 0.85rem; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.06; }
+  .request-intro p:last-child { line-height: 1.6; max-width: 37ch; }
+  fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+  label { display: block; margin-bottom: 0.3rem; color: var(--teal); font-weight: 650; }
+  input, select {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    margin-bottom: 1rem;
+    padding: 0.65rem;
+    border: 1px solid #788b80;
+    border-radius: 7px;
+    background: white;
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .cf-turnstile { margin-bottom: 1rem; }
+
+  .confirmation:not(:empty) {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    background: var(--sage);
+    color: var(--teal);
+    font-weight: 650;
+  }
+
+  footer {
+    border-top: 1px solid #ded5c3;
+    padding: 1.2rem 1.2rem calc(5rem + env(safe-area-inset-bottom));
+    text-align: center;
+    color: var(--teal);
+    font: 1rem/1.4 var(--serif);
+  }
+
+  @media (max-width: 760px) {
+    .album { width: calc(100% - 16px); margin: 8px auto; border-radius: 14px; }
+    .ward { justify-content: center; padding-top: 1.15rem; text-align: center; }
+    .ward::after { display: none; }
+    .hero { justify-items: center; min-height: auto; padding: 1.65rem 1rem 0.75rem; text-align: center; }
+    .hero h1 { max-width: 13ch; margin: auto; font-size: clamp(2.5rem, 8.5vw, 4.2rem); text-wrap: balance; }
+    .desktop-break { display: none; }
+    .hero p { max-width: 25ch; margin: 0.8rem auto 1.2rem; }
+    .hero-art { position: static; transform: none; width: min(100%, 32rem); margin-top: 0.75rem; }
+    .support, .request { grid-template-columns: 1fr; }
+    .card { padding: 1.2rem; }
+  }
+</style>

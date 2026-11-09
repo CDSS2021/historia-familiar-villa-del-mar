@@ -1,0 +1,138 @@
+---
+import activities from '../data/actividades.json';
+
+const sortedActivities = [...activities].sort((a, b) => a.fecha.localeCompare(b.fecha));
+const shortMonth = new Intl.DateTimeFormat('es-PE', { month: 'short', timeZone: 'UTC' });
+const fullDate = new Intl.DateTimeFormat('es-PE', { dateStyle: 'long', timeZone: 'UTC' });
+---
+
+<section class="activities" aria-labelledby="activities-title">
+  <svg class="sprig" viewBox="0 0 64 40" fill="none" aria-hidden="true">
+    <path d="M6 35C22 34 37 26 53 9M18 33C10 26 12 16 16 11c7 7 9 14 2 22ZM31 28c-5-9-2-17 6-23 4 9 0 17-6 23ZM37 24c8-3 17 0 21 5-8 5-16 3-21-5ZM47 15C47 8 54 4 61 4c-1 7-7 12-14 11Z" />
+  </svg>
+  <h2 id="activities-title">Actividades del mes</h2>
+  <p class="month" id="activities-month" hidden></p>
+  <p class="intro">Actividades de templo e historia familiar</p>
+
+  <ul class="agenda" id="activities-list" hidden>
+    {sortedActivities.map((activity) => {
+      const date = new Date(`${activity.fecha}T00:00:00Z`);
+      return (
+        <li class="activity" data-month={activity.fecha.slice(0, 7)} hidden>
+          <time class="date" datetime={activity.fecha} aria-label={fullDate.format(date)}>
+            <span>{date.getUTCDate()}</span>
+            <span>{shortMonth.format(date).replace('.', '')}</span>
+          </time>
+          <div class="activity-info">
+            {activity.ejemplo && <p class="example">Actividad de ejemplo</p>}
+            <h3>{activity.titulo}</h3>
+            <p class="activity-details">
+              <span>{activity.hora}</span>
+              <span>{activity.lugar}</span>
+            </p>
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+  <p class="empty" id="activities-empty" hidden>Aún no hay actividades programadas para este mes.</p>
+  <noscript>Activa JavaScript para consultar las actividades del mes.</noscript>
+</section>
+
+<script>
+  const monthLabel = document.querySelector<HTMLParagraphElement>('#activities-month')!;
+  const agenda = document.querySelector<HTMLUListElement>('#activities-list')!;
+  const entries = agenda.querySelectorAll<HTMLLIElement>('[data-month]');
+  const empty = document.querySelector<HTMLParagraphElement>('#activities-empty')!;
+  const monthKey = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Lima',
+    year: 'numeric',
+    month: '2-digit',
+  });
+  const monthName = new Intl.DateTimeFormat('es-PE', {
+    timeZone: 'America/Lima',
+    year: 'numeric',
+    month: 'long',
+  });
+
+  function showCurrentMonth() {
+    const now = new Date();
+    const currentMonth = monthKey.format(now);
+    let hasActivities = false;
+
+    for (const entry of entries) {
+      const isCurrent = entry.dataset.month === currentMonth;
+      entry.hidden = !isCurrent;
+      hasActivities ||= isCurrent;
+    }
+
+    monthLabel.textContent = monthName.format(now);
+    monthLabel.hidden = false;
+    agenda.hidden = !hasActivities;
+    empty.hidden = hasActivities;
+  }
+
+  showCurrentMonth();
+  window.addEventListener('focus', showCurrentMonth);
+</script>
+
+<style>
+  .activities {
+    max-width: 1060px;
+    width: calc(100% - 2rem);
+    margin: clamp(2rem, 5vw, 5rem) auto;
+    padding: clamp(1.25rem, 4vw, 3.3rem);
+    border-radius: 17px;
+    background: var(--sage);
+    text-align: center;
+  }
+
+  .sprig {
+    display: block;
+    width: 3.5rem;
+    margin: 0 auto 0.6rem;
+    color: #527157;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  h2 { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.06; }
+  .month { margin-top: 0.65rem; color: var(--terracotta); font: 700 clamp(1.25rem, 3vw, 1.75rem)/1.2 var(--serif); }
+  .month::first-letter { text-transform: uppercase; }
+  .intro { margin-top: 0.6rem; }
+  .agenda { max-width: 860px; margin: 1.4rem auto 0; padding: 0; list-style: none; }
+
+  .activity:not([hidden]) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(0.75rem, 3vw, 1.5rem);
+    margin-top: 0.7rem;
+    padding: clamp(0.75rem, 2.5vw, 1.25rem);
+    border: 1px solid #8aa193;
+    border-radius: 13px;
+    background: var(--ivory);
+    text-align: start;
+  }
+
+  .date {
+    display: grid;
+    place-content: center;
+    min-width: clamp(3.2rem, 10vw, 5rem);
+    aspect-ratio: 1;
+    border-radius: 9px;
+    background: #527157;
+    color: var(--ivory);
+    text-align: center;
+    text-transform: uppercase;
+    font: 700 0.78rem/1.1 var(--sans);
+  }
+
+  .date span:first-child { font: 700 clamp(1.35rem, 4vw, 2rem)/1.05 var(--serif); }
+  h3 { margin: 0; color: var(--teal); font: 700 clamp(1.15rem, 3vw, 1.65rem)/1.2 var(--serif); }
+  .example { margin-bottom: 0.25rem; color: var(--terracotta); font-size: 0.8rem; font-weight: 650; }
+  .activity-details { display: flex; flex-wrap: wrap; gap: 0.15rem 0.75rem; margin-top: 0.35rem; line-height: 1.4; }
+  .empty { margin-top: 1.4rem; }
+</style>

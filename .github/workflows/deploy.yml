@@ -1,0 +1,50 @@
+name: Publicar en GitHub Pages
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PUBLIC_SOLICITUDES_URL: ${{ vars.PUBLIC_SOLICITUDES_URL }}
+      PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Comprobar que el formulario pueda activarse
+        shell: bash
+        run: |
+          if [[ -z "${PUBLIC_SOLICITUDES_URL//[[:space:]]/}" || -z "${PUBLIC_TURNSTILE_SITE_KEY//[[:space:]]/}" ]]; then
+            echo "::error::Configura PUBLIC_SOLICITUDES_URL y PUBLIC_TURNSTILE_SITE_KEY en las variables del repositorio."
+            exit 1
+          fi
+          site_origin="https://${GITHUB_REPOSITORY_OWNER,,}.github.io"
+          status=$(curl --silent --show-error --max-time 15 --output /dev/null --write-out '%{http_code}' \
+            --header "Origin: ${site_origin}" -- "${PUBLIC_SOLICITUDES_URL}")
+          if [[ "$status" != '204' ]]; then
+            echo "::error::El Worker no está listo (HTTP $status). Revisa el código desplegado, SITE_ORIGIN y los secretos."
+            exit 1
+          fi
+      - uses: withastro/action@v6
+        with:
+          node-version: 24
+          package-manager: pnpm@11.25.0
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v5
